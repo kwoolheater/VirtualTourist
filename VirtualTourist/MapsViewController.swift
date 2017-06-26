@@ -11,6 +11,7 @@ import MapKit
 
 class MapsViewController: UIViewController, MKMapViewDelegate {
 
+    var annotations = [MKPointAnnotation]()
     var deleteMode = false
     
     @IBOutlet weak var map: MKMapView!
@@ -19,20 +20,17 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         // TODO: Add action
-        setUpUI()
-        addLongPress()
-
+        setUI()
         
     }
 
-    func setUpUI() {
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Edit", style: .plain, target: self, action: nil)
-    }
-    
-    func addLongPress() {
+    func setUI() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(turnOnDeleteMode))
+        
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(action))
         longPress.minimumPressDuration = 1.0
         map.addGestureRecognizer(longPress)
+        
     }
     
     func action(gestureRecognizer:UIGestureRecognizer){
@@ -42,7 +40,46 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
             let annotation = MKPointAnnotation()
             annotation.coordinate = newCoordinates
             map.addAnnotation(annotation)
+            annotations.append(annotation)
         }
+    }
+    // Adding in the Map Annotation View
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        let reuseId = "pin"
+        
+        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
+        
+        if pinView == nil {
+            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+            pinView!.canShowCallout = true
+            pinView!.animatesDrop = true
+            
+            let calloutButton = UIButton(type: .detailDisclosure)
+            pinView!.rightCalloutAccessoryView = calloutButton
+            pinView!.sizeToFit()
+        } else {
+            pinView!.annotation = annotation
+        }
+        
+        return pinView
+    }
+    
+    // TODO: work on delete pins
+    
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        
+        if deleteMode {
+            let annotation = map.selectedAnnotations
+            map.removeAnnotation(annotation as! MKAnnotation)
+        }
+        
+    }
+    
+    func turnOnDeleteMode() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: nil)
+        deleteMode = true
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(action))
+        map.removeGestureRecognizer(longPress)
     }
 
 }
