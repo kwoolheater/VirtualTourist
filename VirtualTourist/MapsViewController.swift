@@ -11,7 +11,7 @@ import MapKit
 
 class MapsViewController: UIViewController, MKMapViewDelegate {
 
-    var annotations = [MKPointAnnotation]()
+    var annotationsArray = [MKPointAnnotation]()
     var deleteMode = false
     var selectedPin: MKPointAnnotation? = nil
     
@@ -35,13 +35,16 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
     }
     
     func action(gestureRecognizer:UIGestureRecognizer){
-        if gestureRecognizer.state == .ended {
-            let touchPoint = gestureRecognizer.location(in: map)
-            let newCoordinates = map.convert(touchPoint, toCoordinateFrom: map)
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = newCoordinates
-            map.addAnnotation(annotation)
-            annotations.append(annotation)
+        // If in delete mode, no adding pins!
+        if deleteMode { return } else {
+            if gestureRecognizer.state == .ended {
+                let touchPoint = gestureRecognizer.location(in: map)
+                let newCoordinates = map.convert(touchPoint, toCoordinateFrom: map)
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = newCoordinates
+                map.addAnnotation(annotation)
+                annotationsArray.append(annotation)
+            }
         }
     }
     // Adding in the Map Annotation View
@@ -50,6 +53,7 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
     // TODO: work on delete pins
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        // Add Map Annotation View
         let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pin")
         annotationView.canShowCallout = false
         
@@ -57,31 +61,31 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
     }
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        
+        // Annotation selected
         map.deselectAnnotation(view.annotation, animated: true)
         guard let annotation = view.annotation else {
             print("Didn't select an annotation")
             return
         }
-        
+        // Clear selected pin in case it is populated
         selectedPin = nil
         
-        for pin in annotations {
-            var numOfPins = 0
+        // Loop through annotations array to find the specific annotation selected
+        for pin in annotationsArray {
             
             if annotation.coordinate.latitude == pin.coordinate.latitude && annotation.coordinate.longitude == pin.coordinate.longitude {
                 selectedPin = pin
+                
+                // Check the mode in to see what to do with the selection
                 if deleteMode {
                     print("deleting pin!")
                     self.map.removeAnnotation(annotation)
-                    annotations.remove(at: numOfPins )
+                    annotationsArray.remove(at: annotationsArray.index(of: pin)!)
+                } else {
+                    // TODO: segue to next view
                 }
             }
-            numOfPins += 1
-            
         }
-        
-        
     }
     
     func turnOnDeleteMode() {
