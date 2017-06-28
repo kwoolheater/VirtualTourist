@@ -20,11 +20,12 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        // TODO: Add action
+        
         setUI()
         map.delegate = self
     }
 
+    // Set UI with long tap gesture and Navigation Items
     func setUI() {
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(turnOnDeleteMode))
         deleteMode = false
@@ -53,6 +54,7 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
         // Add Map Annotation View
         let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pin")
         annotationView.canShowCallout = false
+        annotationView.animatesDrop = true
         
         return annotationView
     }
@@ -77,11 +79,10 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
                 // Check the mode in to see what to do with the selection
                 if deleteMode {
                     //TODO: add to core data
-                    print("deleting pin!")
                     self.map.removeAnnotation(annotation)
                     annotationsArray.remove(at: annotationsArray.index(of: pin)!)
                 } else {
-                    // TODO: segue to next view
+                    performSegue(withIdentifier: "segue", sender: selectedPin)
                 }
             }
         }
@@ -96,6 +97,15 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
     
     func turnOffDeleteMode() {
         setUI()
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        if segue.identifier == "segue" {
+            let nextScene = segue.destination as? PhotoAlbumViewController
+            nextScene?.annotation = (sender as! MKPointAnnotation)
+        }
+        
     }
 
 }
