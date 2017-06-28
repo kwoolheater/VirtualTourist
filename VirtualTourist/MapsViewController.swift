@@ -27,7 +27,7 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
 
     func setUI() {
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(turnOnDeleteMode))
-        
+        deleteMode = false
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(action))
         longPress.minimumPressDuration = 1.0
         map.addGestureRecognizer(longPress)
@@ -44,14 +44,11 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
                 annotation.coordinate = newCoordinates
                 map.addAnnotation(annotation)
                 annotationsArray.append(annotation)
+                // TODO: add to core data
             }
         }
     }
     // Adding in the Map Annotation View
-    
-    
-    // TODO: work on delete pins
-    
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         // Add Map Annotation View
         let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pin")
@@ -60,6 +57,7 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
         return annotationView
     }
     
+    // Handle annotation selected, either delete or segue to next view
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         // Annotation selected
         map.deselectAnnotation(view.annotation, animated: true)
@@ -78,6 +76,7 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
                 
                 // Check the mode in to see what to do with the selection
                 if deleteMode {
+                    //TODO: add to core data
                     print("deleting pin!")
                     self.map.removeAnnotation(annotation)
                     annotationsArray.remove(at: annotationsArray.index(of: pin)!)
@@ -89,10 +88,14 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
     }
     
     func turnOnDeleteMode() {
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: nil)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(turnOffDeleteMode))
         deleteMode = true
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(action))
         map.removeGestureRecognizer(longPress)
+    }
+    
+    func turnOffDeleteMode() {
+        setUI()
     }
 
 }
