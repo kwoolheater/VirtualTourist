@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="12141" systemVersion="16F73" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <elements/>
+    <entity name="Images" representedClassName=".Images" syncable="YES">
+        <attribute name="imageData" optional="YES" attributeType="Binary" spotlightIndexingEnabled="YES" syncable="YES"/>
+        <relationship name="pin" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Pin" inverseName="images" inverseEntity="Pin" syncable="YES"/>
+    </entity>
+    <entity name="Pin" representedClassName=".Pin" syncable="YES">
+        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES" spotlightIndexingEnabled="YES" syncable="YES"/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES" spotlightIndexingEnabled="YES" syncable="YES"/>
+        <relationship name="images" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Images" inverseName="pin" inverseEntity="Images" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Images" positionX="151" positionY="-3" width="128" height="75"/>
+        <element name="Pin" positionX="-63" positionY="-18" width="128" height="90"/>
+    </elements>
 </model>

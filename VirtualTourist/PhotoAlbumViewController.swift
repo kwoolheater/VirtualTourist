@@ -9,8 +9,9 @@
 import Foundation
 import UIKit
 import MapKit
+import CoreData
 
-class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource {
+class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource  {
     
     var annotation: MKPointAnnotation? = nil
     var imageURLs = [String]()
@@ -29,11 +30,11 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     }
     
     func loadImages() {
+        SavedItems.sharedInstance().imageArray.removeAll()
         Client.sharedInstance().getImageFromFlickr(long: (annotation?.coordinate.longitude)!, lat: (annotation?.coordinate.latitude
             )!) { (success, error) in
             if success {
                 self.imageURLs = SavedItems.sharedInstance().imageArray
-                print(self.imageURLs)
                 self.collectionView.reloadData()
             } else {
                 print(error?.userInfo as Any)
@@ -64,6 +65,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath:IndexPath) {
+        
+        
     }
-    
 }

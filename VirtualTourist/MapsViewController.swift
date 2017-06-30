@@ -8,9 +8,11 @@
 
 import UIKit
 import MapKit
+import CoreData
 
-class MapsViewController: UIViewController, MKMapViewDelegate {
+class MapsViewController: CoreDataViewController, MKMapViewDelegate {
 
+    let delegate = UIApplication.shared.delegate as! AppDelegate
     var annotationsArray = [MKPointAnnotation]()
     var deleteMode = false
     var selectedPin: MKPointAnnotation? = nil
@@ -19,12 +21,47 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        let stack = delegate.stack
+        map.delegate = self
+        
+        //Create the fetch Request
+        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
+        let latitudeDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+        let longitudeDescriptor = NSSortDescriptor(key: "longitude", ascending: false)
+        fr.sortDescriptors = [latitudeDescriptor, longitudeDescriptor]
+        
+        // Init FetchResultsController
+        fetchResultController = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: stack.context, sectionNameKeyPath: nil, cacheName: nil)
+        
+        
+        loadPins()
         
         setUI()
-        map.delegate = self
+        
     }
-
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(true)
+            self.map.addAnnotations(annotationsArray)
+            print("added")
+    }
+    
+    func loadPins() {
+        do{
+            let array = try! delegate.stack.context.fetch((fetchResultController?.fetchRequest)!) as! [Pin]
+        
+            for pin in array {
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+                annotationsArray.append(annotation)
+            }
+            
+        } catch {
+            fatalError("Error")
+        }
+    }
+    
     // Set UI with long tap gesture and Navigation Items
     func setUI() {
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(turnOnDeleteMode))
@@ -32,7 +69,6 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(action))
         longPress.minimumPressDuration = 1.0
         map.addGestureRecognizer(longPress)
-        
     }
     
     func action(gestureRecognizer:UIGestureRecognizer){
@@ -46,16 +82,22 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
                 map.addAnnotation(annotation)
                 annotationsArray.append(annotation)
                 // TODO: add to core data
+                let ann = Pin(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude, context: fetchResultController!.managedObjectContext)
+                print("Just created a new pin \(ann)")
             }
         }
     }
     // Adding in the Map Annotation View
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         // Add Map Annotation View
-        let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pin")
-        annotationView.canShowCallout = false
-        annotationView.animatesDrop = true
-        
+        var annotationView = map.dequeueReusableAnnotationView(withIdentifier: "pin") as? MKPinAnnotationView
+        if annotationView == nil {
+            annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pin")
+            annotationView?.canShowCallout = false
+            annotationView?.animatesDrop = true
+        } else {
+            annotationView?.annotation = annotation
+        }
         return annotationView
     }
     
@@ -93,7 +135,8 @@ class MapsViewController: UIViewController, MKMapViewDelegate {
         deleteMode = true
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(action))
         map.removeGestureRecognizer(longPress)
-    }
+        }
+    
     
     func turnOffDeleteMode() {
         setUI()
