@@ -13,11 +13,15 @@ import CoreData
 class MapsViewController: CoreDataViewController, MKMapViewDelegate {
 
     let delegate = UIApplication.shared.delegate as! AppDelegate
-    var annotationsArray = [MKPointAnnotation]()
+    var annotationsArray: [Pin]?
     var deleteMode = false
     var selectedPin: MKPointAnnotation? = nil
     
     @IBOutlet weak var map: MKMapView!
+    
+    var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>?
+    //get stack
+    let stack = (UIApplication.shared.delegate as! AppDelegate).stack
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,15 +29,14 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
         let stack = delegate.stack
         map.delegate = self
         
-        //Create the fetch Request
-        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
-        let latitudeDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
-        let longitudeDescriptor = NSSortDescriptor(key: "longitude", ascending: false)
-        fr.sortDescriptors = [latitudeDescriptor, longitudeDescriptor]
-        
-        // Init FetchResultsController
-        fetchResultController = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: stack.context, sectionNameKeyPath: nil, cacheName: nil)
-        
+//        //Create the fetch Request
+//        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
+//        let latitudeDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+//        let longitudeDescriptor = NSSortDescriptor(key: "longitude", ascending: false)
+//        fr.sortDescriptors = [latitudeDescriptor, longitudeDescriptor]
+//        
+//        // Init FetchResultsController
+//        fetchResultController = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: stack.context, sectionNameKeyPath: nil, cacheName: nil)
         
         loadPins()
         
@@ -41,25 +44,25 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
         
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(true)
-            self.map.addAnnotations(annotationsArray)
-            print("added")
-    }
-    
     func loadPins() {
-        do{
-            let array = try! delegate.stack.context.fetch((fetchResultController?.fetchRequest)!) as! [Pin]
+        var array = [MKPointAnnotation]()
         
-            for pin in array {
-                let annotation = MKPointAnnotation()
-                annotation.coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
-                annotationsArray.append(annotation)
-            }
-            
+        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
+        fr.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
+        
+        do {
+            annotationsArray = try stack.context.fetch(fr) as? [Pin]
         } catch {
             fatalError("Error")
         }
+        
+        for pin in annotationsArray! {
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+            array.append(annotation)
+        }
+        
+        map.addAnnotations(array)
     }
     
     // Set UI with long tap gesture and Navigation Items
@@ -80,10 +83,15 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
                 let annotation = MKPointAnnotation()
                 annotation.coordinate = newCoordinates
                 map.addAnnotation(annotation)
-                annotationsArray.append(annotation)
                 // TODO: add to core data
-                let ann = Pin(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude, context: fetchResultController!.managedObjectContext)
+                let ann = Pin(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude, context: stack.context)
+                annotationsArray?.append(ann)
                 print("Just created a new pin \(ann)")
+                do {
+                    try stack.context.save()
+                } catch {
+                    print("Error saving the pin")
+                }
             }
         }
     }
@@ -113,21 +121,22 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
         selectedPin = nil
         
         // Loop through annotations array to find the specific annotation selected
-        for pin in annotationsArray {
-            
-            if annotation.coordinate.latitude == pin.coordinate.latitude && annotation.coordinate.longitude == pin.coordinate.longitude {
-                selectedPin = pin
-                
-                // Check the mode in to see what to do with the selection
-                if deleteMode {
-                    //TODO: add to core data
-                    self.map.removeAnnotation(annotation)
-                    annotationsArray.remove(at: annotationsArray.index(of: pin)!)
-                } else {
-                    performSegue(withIdentifier: "segue", sender: selectedPin)
-                }
-            }
-        }
+//        for pin in annotationsArray! {
+//            
+//            if annotation.coordinate.latitude == pin.coordinate.latitude && annotation.coordinate.longitude == pin.coordinate.longitude {
+//                selectedPin = pin
+//                
+//                // Check the mode in to see what to do with the selection
+//                if deleteMode {
+//                    //TODO: add to core data
+//                    self.map.removeAnnotation(annotation)
+//                    annotationsArray.
+//                    annotationsArray.remove(at: annotationsArray.index(of: pin)!)
+//                } else {
+//                    performSegue(withIdentifier: "segue", sender: selectedPin)
+//                }
+//            }
+//        }
     }
     
     func turnOnDeleteMode() {
