@@ -121,22 +121,25 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
         selectedPin = nil
         
         // Loop through annotations array to find the specific annotation selected
-//        for pin in annotationsArray! {
-//            
-//            if annotation.coordinate.latitude == pin.coordinate.latitude && annotation.coordinate.longitude == pin.coordinate.longitude {
-//                selectedPin = pin
-//                
-//                // Check the mode in to see what to do with the selection
-//                if deleteMode {
-//                    //TODO: add to core data
-//                    self.map.removeAnnotation(annotation)
-//                    annotationsArray.
-//                    annotationsArray.remove(at: annotationsArray.index(of: pin)!)
-//                } else {
-//                    performSegue(withIdentifier: "segue", sender: selectedPin)
-//                }
-//            }
-//        }
+        for pin in annotationsArray! {
+            if annotation.coordinate.latitude == pin.latitude && annotation.coordinate.longitude == pin.longitude {
+                selectedPin = annotation as? MKPointAnnotation
+                
+                if deleteMode {
+                    // TODO: delete from core data
+                    self.map.removeAnnotation(annotation)
+                    stack.context.delete(pin)
+                    do {
+                        try stack.context.save()
+                    } catch {
+                        print("Error deleting pin")
+                    }
+                    annotationsArray?.remove(at: (annotationsArray?.index(of: pin)!)!)
+                } else {
+                    performSegue(withIdentifier: "segue", sender: selectedPin)
+                }
+            }
+        }
     }
     
     func turnOnDeleteMode() {
@@ -144,7 +147,7 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
         deleteMode = true
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(action))
         map.removeGestureRecognizer(longPress)
-        }
+    }
     
     
     func turnOffDeleteMode() {
