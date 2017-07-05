@@ -1,10 +1,12 @@
 //
 //  CoreDataStack.swift
+//  VirtualTourist
 //
-//  Created by Fernando Rodríguez Romero on 21/02/16.
-//  Copyright © 2016 udacity.com. All rights reserved.
+//  Created by Kiyoshi Woolheater on 7/5/17.
+//  Copyright © 2017 Kiyoshi Woolheater. All rights reserved.
 //
 
+import Foundation
 import CoreData
 
 // MARK: - CoreDataStack
@@ -70,8 +72,6 @@ struct CoreDataStack {
         try coordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: dbURL, options: nil)
     }
 }
-
-
 
 // MARK: - CoreDataStack (Removing Data)
 
