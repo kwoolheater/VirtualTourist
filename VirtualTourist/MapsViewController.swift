@@ -25,23 +25,10 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        let stack = delegate.stack
         map.delegate = self
         
-//        //Create the fetch Request
-//        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
-//        let latitudeDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
-//        let longitudeDescriptor = NSSortDescriptor(key: "longitude", ascending: false)
-//        fr.sortDescriptors = [latitudeDescriptor, longitudeDescriptor]
-//        
-//        // Init FetchResultsController
-//        fetchResultController = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: stack.context, sectionNameKeyPath: nil, cacheName: nil)
-        
         loadPins()
-        
         setUI()
-        
     }
     
     func loadPins() {
@@ -86,7 +73,6 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
                 // TODO: add to core data
                 let ann = Pin(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude, context: stack.context)
                 annotationsArray?.append(ann)
-                print("Just created a new pin \(ann)")
                 do {
                     try stack.context.save()
                 } catch {

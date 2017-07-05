@@ -18,6 +18,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     @IBOutlet weak var smallMap: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var label: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,10 +33,15 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     func loadImages() {
         SavedItems.sharedInstance().imageArray.removeAll()
         Client.sharedInstance().getImageFromFlickr(long: (annotation?.coordinate.longitude)!, lat: (annotation?.coordinate.latitude
-            )!) { (success, error) in
+            )!) { (success, photo, error) in
+            // Handle no photos at this location
             if success {
-                self.imageURLs = SavedItems.sharedInstance().imageArray
-                self.collectionView.reloadData()
+                if photo {
+                    self.label.text = "There are no photos at this location."
+                } else {
+                    self.imageURLs = SavedItems.sharedInstance().imageArray
+                    self.collectionView.reloadData()
+                }
             } else {
                 print(error?.userInfo as Any)
             }

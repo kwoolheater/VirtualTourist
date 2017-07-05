@@ -12,7 +12,7 @@ class Client: NSObject {
     
     let session = URLSession.shared
     
-    func getImageFromFlickr(long: Double, lat: Double, completionHandlerForGetImage: @escaping(_ success: Bool, _ error: NSError?) -> Void) -> URLSessionDataTask {
+    func getImageFromFlickr(long: Double, lat: Double, completionHandlerForGetImage: @escaping(_ success: Bool,_ photo: Bool ,_ error: NSError?) -> Void) -> URLSessionDataTask {
         
         let methodParameters = [
             Constants.FlickrParameterKeys.Method: Constants.FlickrParameterValues.LocationPhotosMethod,
@@ -38,7 +38,7 @@ class Client: NSObject {
             func displayError(_ error: String) {
                 print("URL at time of error: \(url)")
                 let userInfo = [NSLocalizedDescriptionKey : error]
-                completionHandlerForGetImage(false, NSError(domain: "taskError", code: 1, userInfo: userInfo))
+                completionHandlerForGetImage(false, false,NSError(domain: "taskError", code: 1, userInfo: userInfo))
             }
             
             /* GUARD: Was there an error? */
@@ -61,12 +61,15 @@ class Client: NSObject {
             
             // parse the data
             let parsedResult: [String:AnyObject]!
+            
             do {
                 parsedResult = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [String:AnyObject]
             } catch {
                 displayError("Could not parse the data as JSON: '\(data)'")
                 return
             }
+            
+            print(parsedResult)
             
             /* GUARD: Did Flickr return an error (stat != ok)? */
             guard let stat = parsedResult[Constants.FlickrResponseKeys.Status] as? String, stat == Constants.FlickrResponseValues.OKStatus else {
@@ -75,9 +78,13 @@ class Client: NSObject {
             }
             
             /* GUARD: Are the "photos" and "photo" keys in our result? */
-            guard let photosDictionary = parsedResult[Constants.FlickrResponseKeys.Photos] as? [String:AnyObject], let photoArray = photosDictionary[Constants.FlickrResponseKeys.Photo] as? [[String:AnyObject]] else {
+            guard let photosDictionary = parsedResult[Constants.FlickrResponseKeys.Photos] as? [String:AnyObject], let numberOfPages = photosDictionary[Constants.FlickrParameterKeys.Pages] as? Int, let photoArray = photosDictionary[Constants.FlickrResponseKeys.Photo] as? [[String:AnyObject]] else {
                 displayError("Cannot find keys '\(Constants.FlickrResponseKeys.Photos)' and '\(Constants.FlickrResponseKeys.Photo)' in \(parsedResult)")
                 return
+            }
+            
+            if numberOfPages == 0 {
+                completionHandlerForGetImage(true, true, nil)
             }
             
             var imageArray = [String]()
@@ -88,31 +95,22 @@ class Client: NSObject {
                     displayError("Cannot find key '\(Constants.FlickrResponseKeys.MediumURL)' in \(key)")
                     return
                 }
+                
                 imageArray.append(imageUrlString)
             }
             
             for value in imageArray {
                 SavedItems.sharedInstance().imageArray.append(value)
             }
-            completionHandlerForGetImage(true, nil)
             
-            
-            // if an image exists at the url, set the image and title
-            //let imageURL = URL(string: imageUrlString)
-            //if let imageData = try? Data(contentsOf: imageURL!) {
-                //print(imageData)
-//                DispatchQueue.main.async {
-//                    self.photoImageView.image = UIImage(data: imageData)
-//                    self.photoTitleLabel.text = photoTitle ?? "(Untitled)"
-//                }
-            //} else {
-            //    displayError("Image does not exist.")
-            //}
+            completionHandlerForGetImage(true, false, nil)
         }
         
         // start the task!
         task.resume()
         return task
+        
+        
     }
     
     private func escapedParameters(_ parameters: [String:AnyObject]) -> String {
