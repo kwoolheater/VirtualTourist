@@ -69,8 +69,6 @@ class Client: NSObject {
                 return
             }
             
-            print(parsedResult)
-            
             /* GUARD: Did Flickr return an error (stat != ok)? */
             guard let stat = parsedResult[Constants.FlickrResponseKeys.Status] as? String, stat == Constants.FlickrResponseValues.OKStatus else {
                 displayError("Flickr API returned an error. See error code and message in \(parsedResult)")

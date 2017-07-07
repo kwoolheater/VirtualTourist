@@ -46,9 +46,10 @@ class PhotoAlbumViewController: CoreDataViewController, MKMapViewDelegate, UICol
         }
         
         let fetchedObjects = fetchResultController?.fetchedObjects
-        
-        if fetchedObjects?.count == 0 {
+        print(fetchedObjects)
+        if fetchedObjects == nil  {
             loadImages()
+            self.collectionView.reloadData()
         } else {
             SavedItems.sharedInstance().imageArray.removeAll()
             SavedItems.sharedInstance().imageArray = fetchedObjects! as! [Data]
@@ -84,8 +85,9 @@ class PhotoAlbumViewController: CoreDataViewController, MKMapViewDelegate, UICol
         for url in imageURLs {
             let imageURLString = URL(string: url)
             if let imageData = try? Data(contentsOf: imageURLString!) {
-                let image = Images(imageData: imageData as NSData, context: stack.context)
+                //let image = Images(imageData: imageData as NSData, context: stack.context)
                 SavedItems.sharedInstance().imageArray.append(imageData)
+                
                 do {
                     try stack.context.save()
                 } catch {
@@ -95,6 +97,9 @@ class PhotoAlbumViewController: CoreDataViewController, MKMapViewDelegate, UICol
                 print("Image does not exist at \(url)")
             }
         }
+        print(SavedItems.sharedInstance().imageArray)
+        collectionView.reloadData()
+        
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
