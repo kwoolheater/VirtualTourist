@@ -100,7 +100,7 @@ class Client: NSObject {
             }
             
             for value in imageArray {
-                SavedItems.sharedInstance().imageArray.append(value)
+                SavedItems.sharedInstance().imageURLArray.append(value)
             }
             
             completionHandlerForGetImage(true, false, nil)

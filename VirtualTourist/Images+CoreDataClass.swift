@@ -12,8 +12,8 @@ import CoreData
 @objc(Images)
 public class Images: NSManagedObject {
     
-    convenience init(imageData: NSData, context:NSManagedObjectContext) {
-        if let ent = NSEntityDescription.entity(forEntityName: "Image", in: context){
+    convenience init(imageData: NSData, context: NSManagedObjectContext) {
+        if let ent = NSEntityDescription.entity(forEntityName: "Images", in: context){
             self.init(entity: ent, insertInto: context)
             self.imageData = imageData
         } else {

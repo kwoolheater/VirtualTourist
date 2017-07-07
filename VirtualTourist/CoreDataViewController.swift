@@ -15,6 +15,7 @@ class CoreDataViewController: UIViewController {
     
     var fetchResultController: NSFetchedResultsController<NSFetchRequestResult>? {
         didSet{
+            fetchResultController?.delegate = self as! NSFetchedResultsControllerDelegate
             executeSearch()
         }
     }

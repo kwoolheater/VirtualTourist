@@ -19,7 +19,6 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
     
     @IBOutlet weak var map: MKMapView!
     
-    var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>?
     //get stack
     let stack = (UIApplication.shared.delegate as! AppDelegate).stack
     
@@ -143,8 +142,14 @@ class MapsViewController: CoreDataViewController, MKMapViewDelegate {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
         if segue.identifier == "segue" {
-            let nextScene = segue.destination as? PhotoAlbumViewController
-            nextScene?.annotation = (sender as! MKPointAnnotation)
+            guard let nextScene = segue.destination as? PhotoAlbumViewController else {
+                print("failed segue")
+                return
+            }
+            
+            nextScene.annotation = (sender as! MKPointAnnotation)
+            
+            
         }
         
     }

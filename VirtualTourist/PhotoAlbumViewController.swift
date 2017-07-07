@@ -11,10 +11,25 @@ import UIKit
 import MapKit
 import CoreData
 
-class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource  {
+class PhotoAlbumViewController: CoreDataViewController, MKMapViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource  {
     
     var annotation: MKPointAnnotation? = nil
-    var imageURLs = [String]()
+    var imageURLs = [Data]()
+    lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
+        
+        // Create a fetch request to specify what objects this fetchedResultsController tracks.
+        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Images")
+        fr.sortDescriptors = [NSSortDescriptor(key: "imageData", ascending: true)]
+        
+        // Specify that we only want the photos associated with the tapped pin. (pin is the relationships)
+        fr.predicate = NSPredicate(format: "pin = %@", self.annotation!)
+        
+        // Create and return the FetchedResultsController
+        return NSFetchedResultsController(fetchRequest: fr, managedObjectContext: self.stack.context, sectionNameKeyPath: nil, cacheName: nil)
+        
+    }()
+    
+    let stack = (UIApplication.shared.delegate as! AppDelegate).stack
     
     @IBOutlet weak var smallMap: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
@@ -22,7 +37,24 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadImages()
+        
+        // Check if this pin has photos stored in Core Data.
+        do {
+            try fetchResultController?.performFetch()
+        } catch let error as NSError {
+            print("Error while trying to perform a search: \n\(error)\n\(fetchedResultsController)")
+        }
+        
+        let fetchedObjects = fetchResultController?.fetchedObjects
+        
+        if fetchedObjects?.count == 0 {
+            loadImages()
+        } else {
+            SavedItems.sharedInstance().imageArray.removeAll()
+            SavedItems.sharedInstance().imageArray = fetchedObjects! as! [Data]
+            collectionView.reloadData()
+        }
+        
         smallMap.delegate = self
         smallMap.addAnnotation(annotation!)
         smallMap.centerCoordinate = (annotation?.coordinate)!
@@ -39,11 +71,28 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                 if photo {
                     self.label.text = "There are no photos at this location."
                 } else {
-                    self.imageURLs = SavedItems.sharedInstance().imageArray
+                    self.loadImageData(SavedItems.sharedInstance().imageURLArray)
                     self.collectionView.reloadData()
                 }
             } else {
                 print(error?.userInfo as Any)
+            }
+        }
+    }
+    
+    func loadImageData(_ imageURLs: [String]) {
+        for url in imageURLs {
+            let imageURLString = URL(string: url)
+            if let imageData = try? Data(contentsOf: imageURLString!) {
+                let image = Images(imageData: imageData as NSData, context: stack.context)
+                SavedItems.sharedInstance().imageArray.append(imageData)
+                do {
+                    try stack.context.save()
+                } catch {
+                    print("error saving images in data")
+                }
+            } else {
+                print("Image does not exist at \(url)")
             }
         }
     }
@@ -54,18 +103,14 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! PhotoAlbumViewCell
-        let imageURL = self.imageURLs[(indexPath as NSIndexPath).row]
+        imageURLs = SavedItems.sharedInstance().imageArray
+        let imageData = self.imageURLs[(indexPath as NSIndexPath).row]
         
         // Set the name and image
-        let imageURLString = URL(string: imageURL)
-        if let imageData = try? Data(contentsOf: imageURLString!) {
-            DispatchQueue.main.async {
-                cell.imageView.image = UIImage(data: imageData)
-            }
-        } else {
-            print("Image does not exist at \(imageURL)")
+        DispatchQueue.main.async {
+            cell.imageView.image = UIImage(data: imageData)
         }
-        
+
         return cell
     
     }

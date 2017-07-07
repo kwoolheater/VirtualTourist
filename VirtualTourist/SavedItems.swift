@@ -9,7 +9,8 @@ import Foundation
 
 class SavedItems: NSObject {
     
-    var imageArray = [String]()
+    var imageArray = [Data]()
+    var imageURLArray = [String]()
     
     class func sharedInstance() -> SavedItems {
         struct Singleton {
