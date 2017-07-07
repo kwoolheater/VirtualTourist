@@ -46,7 +46,7 @@ class PhotoAlbumViewController: CoreDataViewController, MKMapViewDelegate, UICol
         }
         
         let fetchedObjects = fetchResultController?.fetchedObjects
-        print(fetchedObjects)
+        
         if fetchedObjects == nil  {
             loadImages()
             self.collectionView.reloadData()
@@ -55,7 +55,7 @@ class PhotoAlbumViewController: CoreDataViewController, MKMapViewDelegate, UICol
             SavedItems.sharedInstance().imageArray = fetchedObjects! as! [Data]
             collectionView.reloadData()
         }
-        
+        imageURLs.removeAll()
         smallMap.delegate = self
         smallMap.addAnnotation(annotation!)
         smallMap.centerCoordinate = (annotation?.coordinate)!
@@ -87,7 +87,7 @@ class PhotoAlbumViewController: CoreDataViewController, MKMapViewDelegate, UICol
             if let imageData = try? Data(contentsOf: imageURLString!) {
                 //let image = Images(imageData: imageData as NSData, context: stack.context)
                 SavedItems.sharedInstance().imageArray.append(imageData)
-                
+                self.imageURLs.append(imageData)
                 do {
                     try stack.context.save()
                 } catch {
@@ -97,9 +97,8 @@ class PhotoAlbumViewController: CoreDataViewController, MKMapViewDelegate, UICol
                 print("Image does not exist at \(url)")
             }
         }
-        print(SavedItems.sharedInstance().imageArray)
-        collectionView.reloadData()
         
+        self.collectionView.reloadData()
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -107,8 +106,8 @@ class PhotoAlbumViewController: CoreDataViewController, MKMapViewDelegate, UICol
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! PhotoAlbumViewCell
         imageURLs = SavedItems.sharedInstance().imageArray
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! PhotoAlbumViewCell
         let imageData = self.imageURLs[(indexPath as NSIndexPath).row]
         
         // Set the name and image
